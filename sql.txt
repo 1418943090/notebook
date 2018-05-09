@@ -1,0 +1,38 @@
+
+----------
+[INNER] join table on 
+----------------------
+select * form table1 INNER JOIN table2 ON table1.id = table2.id;
+
+select dept,count(*) from student group by dept having dept in('****');
+
+自连接是一种特殊的内连接，相互连接的表在物理上是一张表，但在逻辑上可以看做是两张表。
+
+from 表1 as t1 JOIN 表1 as t2 on 连接条件;
+
+通过为表取别名的方法，可以让物理上的一张表在逻辑上成为两张表。
+（查询与刘晨在同一个系学习的学生的姓名、所在系）
+SELECT S1.Sname,S1.Dept FROM Student S1 JOIN Student S2 
+ON S1.Dept = S2.Dept   ---同一个系的学生
+WHERE S2.Sname = '刘晨'  ---S2表作为查询条件
+AND S1.Sname != '刘晨'   ----S1表作为结果表，并从中去掉‘刘晨’本人信息
+--------------------------------------------------------------------------
+1.4 使用TOP限制结果集行数
+在使用SELECT语句进行查询时，有时只需要前几行数据。
+
+TOP (expression) [PERCENT] [WITH TIES]
+1
+expression：指定返回行数的数值表达式。如果指定了PERCENT，expression将隐式转换成float，否则是bigint
+PERCENT：指定只返回结果集中前 expression% 行数据。
+WITH TIES：指定从基本结果集中返回额外的数据行（只有在SELECT子句中包含了ORDER BY子句时，才能使用）。
+TOP谓词写在SELECT单词的后面（如果有DISTINCT，则在DISTINCT后面）。
+
+（查询考试成绩最高的3个成绩。列出学号、课程号、成绩）
+SELECT TOP 3 Sno,Cno,Grade FROM SC ORDER BY Grade DESC
+若要包括并列第3名的成绩：
+SELECT TOP 3 Sno,Cno,Grade WITH TIES FROM SC ORDER BY Grade DESC    
+
+limit 5
+-------------------------------------------------------------
+根据user表创建use_back备份表
+create table user_bake as select * from user;

@@ -1,0 +1,130 @@
+类加载器:
+
+当程序要使用某个类时，如果该类还未被加载到内存中，则系统会通过加载，连接，初始化三步来实现对这个类进行初始化。
+加载:
+   就是将class文件读入内存，并为之创建一个Class对象。
+   任何类被使用时系统都会建立一个Class对象
+连接：
+   验证是否有正确的内部结构，并和其他类协调一致
+   准备 负责为类的静态成员分配内存，并设置默认的初始值
+   解析 将类的二进制数据中的符号引用替换为直接引用
+初始化:
+    就是我们讲过的初始化步骤
+
+类初始化时机：
+   创建类的实例
+   访问类的静态变量，或者为静态变量赋值
+   初始化某个类的子类
+   直接使用java.exe命令来运行某个主类
+   使用反射方式来强制创建某个类或接口对应的java.lang.Class对象
+*****************************************************************************
+类加载器
+   负责将class文件加载到内存中，并为之生成对应的Class对象
+   Bootstrap classLoader 根类加载器，
+       负责java核心类的加载 System String rt.jar下
+   Extension classLoader 扩展类加载器
+       ext目录   
+   System    classLoader 系统类加载器
+       负责在jvm启动时加载来自java命令的class文件
+       以及classpath环境变量所指定的jar包和类路径
+
+native 本地
+****************************************************************************
+反射
+  java反射机制是在运行状态中，对于任意一个类，都能够知道这个类的所有属性和方法；
+  对于任意一个对象，都能够调用它的任意一个方法和属性；这种动态获取的信息以及动态调用对象的方法的功能称
+  为java语言的反射机制。
+  想要解剖一个类，必须先要获取到该类的字节码文件对象。而解剖使用的就是Class类中的方法，所以先要获取到
+  每一个字节码文件对应的Class类型的对象。
+
+-------------------------------------------------------
+通过字节码文件对象，去使用成员变量，构造方法，成员方法
+------------------------------------------------------
+通过反射运配置文件的内容
+通过反射越过泛型检查
+通过反射给任意的一个对象的任意属性赋值为指定的值
+-------------------------------------------------------------
+
+拿到class文件，去使用属性方法。
+就是通过class文件对象，去使用该文件中的成员变量，构造方法，成员方法
+
+要想这样使用，必须得到class文件对象。
+
+Classl类：
+   成员变量 Field   
+   构造方法 Constructor
+   成员方法 Method
+获取class类的getClass()方法
+Student s = new Student();
+Class c1 = s.getClass();
+Student s1 = new Student();
+Class c2 = s1.getClass();
+c1==c2  true 同一个字节码
+
+Class c3 = Student.class;
+
+public static Class forName(String ClassName);
+ ————————————————————开发 方式 三 用的多——————————————————————
+Class c4 = class.forname("package1.Student");带包的全路径
+
+通过反射获取构造方法并使用
+
+Constructor[] con = c.getConstructors();//获取公共构造方法
+                    c.getDeclaredConstructors();//获取所有构造方法
+Constructor getConstructos(...) 获取单个构造方法，参数是构造方法的参数类型的class对象
+
+newInstance() 使用此constructor对象表示的构造方法来创建该构造方法的声明类的新实例，并用指定的
+初始化实例，初始化对象。
+
+Object obj = con.newInstance();
+
+带参构造
+*******************************************************************
+通过反射获取私有构造方法
+
+Class c = Class.forName("package1.Student");
+Constructor con = c.getConstructors();//获取公共的构造方法
+Constructor[] con = c.getDeclaredConstructos(String.class);//返回所有构造方法
+
+Constructor con = c.getConstructor(Integer.class,String.class);
+                = c.getDeclaredConstructor()获取所有包括私有的构造方法。
+con.setAccessible(true);//设置取消语言检查可以访问私有
+*******************************************************************
+通过反射获取成员变量
+getFields();
+Field[] d = c.getFields();//获取所有
+Field[] d = c.getDeclaredFields();
+
+Field field = c.getField("age");//拿到的是一个对象
+
+field.set(student,value);
+
+getMethod();
+
+Method[] method = c.getMethods(); 获取自己的和父类的公共方法
+                       Declared  获取自己的
+                                   String.class int.class
+   m1 = getMethod(String name, Class<?>paraType)
+                    方法名           参数类型
+
+   invoke(Object obj,Object .. args)
+   m1.invoke(obj);  
+ *****************************************************************************
+通过配置文件运行类中的方法
+通过配置文件 获取类包名 方法名
+通过反射调用方法
+******************************************************************************
+通过反射绕过泛型检测
+泛型是给编译器看的 实际上还是Object类型
+
+ArrayList<Integer> array = new ArrayList<Integer>();
+Class c = array.getClass();
+
+Method method = c.getMethod("add",Object.class);
+*********************************************************************************
+动态代理
+在程序运行中产生这个对象
+
+Proxy  InvocationHandler    框架cglib
+newProxyInstance(ClassLoaader,Class<?> T,Invocationhandler)创建动态代理对象
+

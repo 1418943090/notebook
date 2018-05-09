@@ -1,0 +1,16 @@
+hibernate 面试题
+
+1.什么是延迟加载
+  延迟加载机制是为了不必要的性能消耗，当真正需要数据的时候，才真正的去加载数据。 load
+
+2.说一下hibernate的缓存机制 
+
+一级缓存
+    session级别上的 
+二级缓存
+    sessionFactory级别上的
+
+ 查询缓存
+
+ 3. Hibernate查询方式有哪些
+    本地SQL查询，HQL,Criteria

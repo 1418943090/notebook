@@ -1,0 +1,47 @@
+Throwable所有异常类的超类
+
+Exception  
+   A:RuntimeEXception 运行时错误 由于代码写的不完善，产生的错误，可以不捕获  
+   B:编译时错误 必需捕获，否则编译通不过
+error 由JNM生成并抛出
+
+AlgorithmException IOException SQLException FileNotFoundException ClassNotFoundException 
+
+try{
+	
+}catch()
+{ i=7；
+	return i;
+}finally{      return 7   返回的还是7！！！！！！！！！！
+	i=8;
+	一定会执行(在return中间执行)
+}  
+e.printStackTrace();用的最多
+getMessage();
+getName();
+
+自定义异常类 一般什么都不需要写
+
+class myException extends Exception
+{
+	
+
+	myException(String s)
+	{
+	  super(s);//异常提示信息
+	}
+
+}
+
+throw new 异常名();
+
+*****************************
+throws表示一种可能性
+throw抛出一种异常，异常已经发生
+
+*******************************
+final  修饰符 
+finally 异常用于释放资源
+finalize 垃圾回收
+*****************************
+

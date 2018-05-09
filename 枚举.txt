@@ -1,0 +1,38 @@
+
+enum
+
+有限实例的集合
+
+
+自己定义的枚举类
+    
+    public abstract class Direction{
+
+       public static final Direction FRONT = new Direction("前"){
+
+         public void show()//匿名内部类 返回子类对象 不能理解
+         {
+                             
+         }
+       };
+       public static final Direction BEHAND = new Direction();
+       public static final Direction LEFT = new Direction();
+       public static final Direction RIGHT = new Direction();
+    
+       private Strign name();
+
+       private Direction(){//构造私有，别人就不能无限创建了
+       }
+       private Direction(Strign name)
+       {
+         this.name = name;
+       }
+
+       public String getName()
+       {
+           return name;
+       }
+       public abstract void show()
+       {}
+
+    }

@@ -1,0 +1,81 @@
+﻿进程 ：正在运行的程序，可进行资源的分配和调用的基本单位。
+
+而每个进程又包括多个线程。
+java各个进程之间抢占资源
+并行          并发
+并发：不同代码块交替执行的性能
+并行: 不同代码块同时执行的能力
+********************************************
+实现多线程的方法。
+1：类继承Thread类 重写 run()方法
+面试题:run(),start()方法的区别
+run()方法调用，将线程单做普通代码块执行
+start()首先启动线程，然后由jvm去调用该线程run()方法 
+
+getName()获取线程名称 Thread-0 Thread-1 看内部源码  意义不大
+setName()设置线程名。  也可以用有参构造方法，直接设置线程名。
+
+Thread currentThread()  获取当前线程的名称
+
+public final int getPriority() 获取线程的优先级
+public final void setPriority() 设置线程的优先级
+1~10  10最高 默认为 5
+
+Thread.sleep(millios) 线程休眠 
+
+Thread.join()必需等该线程执行完 ，其他线程才能执行
+Thread.yield() 让一会
+
+
+创建线程的第二种方法 实现runnable方法
+
+为啥会有第二种方法呢
+
+首先第二种解决了java单继承的局限性
+其次 对于多个相同程序代码读取同一资源的情况 把线程相同程序的代码 数据有效分离。
+
+synchronized(同步) 
+
+同步代码块 -------- 必需设置同一把锁(锁同一个对象)
+同步方法 -----------它的对象锁为(this)
+静态同步方法--------它的对象锁为(类.class) 类的字节码
+
+线程安全类  StringBuffer Vector  Hashtable  方法 被 synchronized修饰
+Collections.synchronizedList(List);
+**************************************************************
+Lock 
+ReentrantLock lock = new ReebtrantLock();
+
+lock.lock()
+lock.unlock()释放锁
+**************************************************************
+为什么 wait(),notify()定义在 Object()
+简单说:因为synchronized中的这把锁可以是任意对象，所以任何对象都可以调用wait(),notify();所以wait()和notify()属于Object();
+
+**************************************************************
+ThreadGroup t = t1.getThreadGroup();
+t1.getCurrentThread().getThreadGroup().getName().
+**************************************************************
+线程池 ？？？数据库 连接池
+  一开始就产生一些线程，用完后还可以回收
+  节约资源，提高程序效率。最麻烦的是设置初始大小。
+  线程里的每一个线程代码结束后，并不会死亡，而是再次回到线程池中成为空闲状态，等待下一个对象来使用
+
+JDK5后java内置线程池
+
+
+Executors 工厂类来产生线程池
+public static ExecutorService newCacheThreadPool();
+public static ExecutorService newFixedThreadPool(int nThreads);
+public static ExecutorService newSingleThreadExecutor();
+
+Callable
+
+ExecutorSevice e = Executors.newFixedThreadPool(2);
+*********************************************************************
+同步有几种方式
+  同步代码块
+  同步方法
+
+
+

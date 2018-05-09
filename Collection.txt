@@ -1,0 +1,65 @@
+
+Collection 所有集合类的超类
+
+   contains();
+   containsAll();
+   size();
+   isEmpty()
+   remove();
+   removeAll();
+   add()
+   clear();
+   toArray();
+
+List  有序 可重复
+   ArrayList(底层基于数组实现)  查询快 增删慢
+           indexOf();
+           lastIndexOf();
+           set();
+
+   LinkedList(底层基于链表实现) 增删快，查询慢
+            addFirst()
+            addLast()
+
+            getFirst()
+            getLast()
+
+            removeFirat();
+            removeLast();
+
+            poolFirst();
+            poolLast();
+            pool()获取并移除表的第一个元素 如果不存在返回null
+            peek()获取但不移除
+            peekFirst()  不存在返回null
+            peekLast();
+Set   无序 不能重复
+
+       HashSet  无序 不能重复
+           add() 方法 底层 调用 HashMap 的put()方法  先通过hashcode()计算哈希值 获得数组下标索引。如果有存在哈希值相同的元素，则调用
+                          equals()方法 如果还相同的话 则识为同一元素，不添加。
+
+                       hash 将object装换成一个整形    inedxof将该整形装换成数组的下标
+
+                       HashMap 数组长度为偶数  &运算效率高  默认大小为16  以后每次增大2n
+                       HashTable 数组长度为素数 哈希散列分布更均匀 11 2n+1
+
+       TreeSet
+               红黑二叉树 (自平衡)  保证元素有序
+               怎么定义排序规则呢
+               1：自然排序  实现comparable接口
+               2：比较器排序  new comparator{
+               }
+
+      Map
+         HashMap 线程不安全，效率高 key,value可以为空
+              HashMap<K,V>  
+                  Set<String>  hashmap.keySet();
+                  get();
+                 Entry<K,V> enter = hashmap.entry();
+
+                 entry.getKey();
+                 entty.getValue();
+         TreeMap 
+               
+         HashTable  线程安全，效率低， key value不能为空

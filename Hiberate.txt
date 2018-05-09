@@ -1,0 +1,641 @@
+https://www.cnblogs.com/liuhaoyu/p/7130266.html
+
+Configuration:负责配置并启动Hiberate
+SessionFactory:负责初始化Hibernate
+Session:  save()  负责持久化对象的CRUD操作
+
+ORP  Object 
+
+Transaction:
+Query:
+Criteric:
+
+hibernate4之后 集成了annotation 所以用不着导jar包。
+不要用 new AnnotationConfiguration();直接用new Configuration()就行
+实测有用。
+Teacher t = new Teacher(2,"frank","Jiaoshou");
+		
+		
+		Configuration cfg = new Configuration();
+				
+		SessionFactory sf = cfg.configure().buildSessionFactory();
+		
+		Session session = sf.openSession();
+		
+		session.beginTransaction();
+		session.save(t);
+		session.getTransaction().commit();
+		
+		session.close();
+		sf.close();
+**********************************************
+O/R Mapping 简化编程
+O/R Mapping 跨越数据库平台
+******************************
+常见的ORM框架 O/R Mapping ORM (Object Relational Mapping) 对象关系映射
+JPA 接口  统一所有的框架
+********************************************
+hibernate基础配置(重点)
+1: hbm2ddl.auto 
+<property name="hbm2ddl.auto">create</property>
+hibernate 5 需要做如下更改否则会出错
+<property name="dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
+************************************************************
+ <property name="hbm2ddl.auto">update</property>
+
+
+ 列信息更改添加
+ 自动更新
+**********************************************
+先建表再生成类
+********************************
+                   slf 日志框架  
+slf4j nodep , log4j , jdk logging api , apache commons -log
+
+format_sql (true or false)
+
+*********************************企业开发中用注解的多************************
+@Entity
+表名和类名不一致  
+@Table(name="_Teacher")  
+@Enumerated(EnumType.STRING) 不指定类型的话默认为int，即下标值
+@Transient 透明 不存到数据库中
+
+*****************************************
+ID生成策略 (AUTO)
+native 数据库自动选择自增策略
+identity sqlserver
+sequence oricle
+uuid 生成全球唯一的码
+  <id name="id" >
+       <generator class="native"></generator>
+  </id>
+
+@GeneratedValue  默认AUTO
+@GeneratedValue(strategy=GenerationType.IDENTITY ,)
+                    战略               .SEQUENCE(Oricle)
+
+@SequenceGenerator(name="teacherSEQ",sequenceName="???")
+
+@TableGenerator//很少用
+(
+  name=""
+  table=""
+  pkColumnName= "key"
+  valueColumnName="value"
+  pkColumnValue=""
+  allocationSize=1
+)    
+
+联合主键
+     创建主键类
+       实现serialble接口 重写 equals()hashcode()方法  保证唯一性  
+<composite-id name="pk" class="">
+   <key-property name="id"></key-property>
+   <key-property name="name"></key-property>
+</composite-id> 
+为啥要实现序列化？？？
+存在数据库中有多个对象。
+虚拟内存，数据迁移 需要序列化？？？？
+
+注解形式的联合主键
+方式1：
+  组件类  @Embeddable
+  @Id
+  组件属性
+方式2：
+   把@Id 换成 @EmbeddedId
+   组件类类不用写@Embeddable
+方式3：
+   在Id上@Id在name上@Id
+   @IdClass(TeackerPK.class)
+*************************************
+
+核心开发接口 (重点，用的多)
+Configuration 进行配置信息管理
+Configuration.configure("配置文件名，在classpath路径下找").buildSessionFactory();
+
+SessionFactory() 维护最重要的东西数据库连接池  每一个Session 就是一个Connection 可以这样理解(不局限这个)
+
+//单例
+Session session = SessionFactory.openSession();//每次打开一个新的session
+Session session = SessionFactory.getCurrentSession();//打开已存在的session 不一定是开个新的session
+                                                     //没有提交之前，拿的是同一个session
+                                                     //用途 界定事务边界
+                                             //openSession 需要close
+                                             //getCurrentSession 事务提交的时候自动close
+
+ 
+getCurrentSession() openSession()不能混用 拿到的具体实现不一样！！！！！！！！！！！！
+session.beginTransaction();
+session.save();
+session.getTransaction().commit();
+session.clsoe()
+**************************************************************
+<property current_session_context_calss>thread</property>
+**************************************************************
+jta
+JTA事务----JAVA规定管理事务的API -java transaction api
+分布式 事务   Transaction Manager  
+*****************************************
+对象的三种状态
+Session.save()//persist 持久化 transient
+t.getId();//本来没有ID save后有id  
+
+Transient
+  |                  get()
+  |save()            load()
+  |saveOrUpdate()    find() iterate() delete()
+  |
+Persistent 
+  |
+  |evict() close() clear() | update() saveOrUpdate() lock()
+  |
+Detached
+对象的三种状态
+瞬时 没id,没关联
+
+持久 有id,有关联
+
+游离 有id,没关联
+
+持久化状态:持久化状态对象会在事务提交时会持久化到数据库，我们需要将对象持久化到数据库，就需要把对象转换为持久化状态。
+------------------------------------------------------------------
+new 一个Session Transient  有没有ID 
+save() Persistent    会缓存session HashMap      数据库中有没有ID
+close() Detached           内存中有没有ID
+Session 内存中的一个对象 HashMap  key-id  value-Teacher对象 缓存 ---提高效率
+******************************************************
+增save()
+删delete() 
+load()   get()
+load(Teacher.class,1); id 自动打包 返回一个Teacher对象
+生成的是代理对象 什么时候需要获取数据,什么时候 调用 sql语句
+session关闭后 geName()就找不到了
+get(Teacher.class,1);
+直接加载，调用sql语句。把数据放到对象中  (先查缓存。没有再 发sql语句)
+session关闭后，geName()依旧可以返回值
+
+———————————————————————————更新—Update———————————————————————————————————
+
+update() 
+更新transient对象会报错 没有Id
+人为设一个Id不会报错
+update()
+会把所有字段更新！怎么解决？
+persistent状态的下 更改字段 也会全部字段更新
+如果和原来没有区别 不会发sql语句
+--------------------------------
+方式一：@Column(updatable=false)极少用可以忘了
+方式二：<class name=" " dynamic-update="true"></class>
+在persistent才能和数据库中数据比较
+如果在detached状态下 设置了 dynamic-update 也会更新全部字段
+
+session.merge() 先从数据库load 在update
+*********使用HQL(EJBQ)语句********建议*****
+面对对象查询语言
+Query q = session.createQuery("update Student s set ...");
+q.executeUpdate();
+————————————————————————————————————————————————————————————————————
+-------------------- saveOrUpdate ----()
+
+--------------------- clear -------------------
+session.clear()清除缓存
+--------------------- flush -------------------
+
+session.flush() 强制让缓存数据和数据库数据同步
+
+FlushMode (很少用)有个印象
+commit()默认 会调用flush()
+find()过时
+------------ SchemaExport---------------------------------
+
+new SchemaExport(new Configuration().configure())
+
+------------------------------------------------------
+关系映射(重点，重点)
+对象之间的关系 
+
+一对一
+
+单向 
+双向 
+
+一对一双向外键关联
+
+凡是双向关联 必设 mappedBy
+@OneToOne(mappedBy="wife")
+--------------------------------------------------
+一对一主键关联 (不重要)
+
+primarykeyJoinColumn      可以忘了
+一对一双向主键关联(不重要)
+primarykeyJoinColumn
+
+联合主键-----------------有点用---------------
+
+wife有两个主键
+
+husband类
+
+@OneToOne
+@joinColumns{
+	
+	@joinColumn(name=" " ,referencedColumnName="")
+	@joinColumn(name=" " ,referencedColumnName="")
+}
+@getWife
+
+*************************************************************
+组件映射
+
+@Embedded 嵌入的  类嵌入其他类成为它的一部分
+-----------------------------------------------
+多对一单向映射
+@ManyToOne
+一对多单向映射 (重点，用的多)！！！！！！！
+@OneToMany
+@joinColumn(name="Groupid") 关联字段名
+
+
+------------------------------------------------------
+多对多单向关联
+
+ @ManyToMany
+ @JoinTable(name="t_s",
+    
+              joinColumns= {
+            		  @JoinColumn(name="teacher_id"),
+              },inverseJoinColumns={@JoinColumn(name="student_id")}
+    		)
+getstu()
+
+
+
+---------------------------------------
+多对多双向关联
+
+@ManyToMany
+------------------------------------------
+CRUD 
+
+//级联
+@ManyToOne(cascade=(CascadeType.ALL) 增删改
+
+	,
+    fetch=FetchType.EAGER    lazy,eager 查  
+	)  ALL() - persist(存储的情况下) - refresh - remove(多) - merge -   
+        常用     常用                             常用
+
+一般情况下这样使用
+@ManyToOne fetch 默认为 eager 
+@OneToMany fetch 默认为 lazy
+
+
+CascadeType 就是让编程简单，不是非要用
+        手动 save() 思路更清晰;
+
+铁律:
+  双向关系中要设定双向关联。
+  双向关联 设 mappedBy
+
+-------------------------------------------------------
+ManyToOne 
+get()  取 student group也会取出来 无论设不设 cascade
+
+如果不想取出来 fetch=FetchType.LAZY  默认为 EAGER
+----------------------------------------------------------
+OneToMany  fetch=fetchType.LAZY 默认为LAZY
+-----------------------------------------------------------
+如果是eager的话  load group  就直接关联 group  student 直接一步找出来 发一次sql语句
+-------------------------------------------------------------------------
+而是lazy的话 load group 发一次sql语句只找group  
+
+如果 要 再找sudent 再发一次sql语句
+------------------------------------------------------------
+不要两边设 EAGER
+
+**************************************************************
+
+casCade  设置 merge  用 merge
+         设置 persist 用 persist
+         设置 remove 用  remove
+
+删除
+    
+
+O/R Mapping
+映射模型
+   JPA的Annotation
+   Hibernate annotation extension
+   hibernate xml
+
+编程接口
+   JPA编程接口
+   Hibernate编程接口
+
+--------------------------------------------------------------------------
+如果想消除关联关系，先设定关系为null,在删除对应记录，如果不删记录，该记录就变成垃圾数据
+ 
+ session.createQuery("delete from User u where u.id= 1").executedUpdate();
+******************************************************************
+HQL
+EJBQL是HQL的子集
+---------------------------------------------------
+集合映射  不太重要
+
+
+@OrderBy ("name ASC") 
+ set<uer> 
+
+@MapKey(name="id")
+---------------------------------------------------
+继承映射 (用的很少)
+
+方式一：所有属性都在一张表中
+@Inheritance(strategy=InheritanceType.SINGLE_TABLE)
+@DiscrimnatorColumn(name="discriminator",discriminatorType=discriminatorType.STRING)
+@Discrimnatorvalue("person")
+
+方式三：共有的属性在一张表中  子类有其特有的属性 
+  @Inheritance(strategy=InheritanceType.JOINED)   
+  
+// SINGLE_TABLE    一张表
+   Table_Per_class 每个类一张表
+   joined          每个子类一张表
+    
+
+
+----------------------------------------------------
+
+学生 课程  分数
+
+
+树状结构的设计(至关重要)！！！！！！！！！！！！！！！！！！！！！
+
+同一个类中使用 OneToMany ManyToOne
+
+
+
+
+
+***************************************************************
+*******************************************************************
+***********************************************************
+HQL  
+  查询
+   1：NativeSQL 数据库本地语言 跨平台性差  一般情况下项目不会跨数据库平台
+   2: hibernate query languages
+   3：EJB QL HQL子集
+   4：QBC query by crefiral
+
+
+Query q = session.createQuery("From BBS(类名不是表名)")
+List<BBS> list = q.list();
+
+hql="SELECT name FROM User where id=1";
+方式一：
+Object name= session.createQuery(hql).list().get(0);
+System.out.println(name);
+这种方式不被推荐，当如果id=0的User对象不存在是，使用get(0)会抛出异常，我们通常使用下面这种方式
+
+方式二：通过uniqueResult()方法，该方法返回一个Object对象，如果对象不存在则返回null，如果返回值不唯一，则抛出异常
+
+1 Object name= session.createQuery(hql).uniqueResult();
+2 System.out.println(name)
+    
+("from BBS s where s.name > '6' ")
+(" from Category c order by c.name desc ")
+("select distinct c from Category c order by c.name desc")
+("from catetory c where c.id>:min and c.id<:max").setInteger("max",7)
+q.setParamenter("min",1);
+
+分页
+
+  q.setMaxResults(4);
+  q.setFirstResult(2);
+
+
+left join  right join
+
+List<Object[]> list ("select c.id,c.name ")
+
+from msg where m = :MsgToSearch 对象  不重要
+
+Msg msg = q.uniqueResult();
+% 0个或多个 _一个
+
+
+ lower() upper() trim() length() 不重要
+
+ abs() sqrt() mod() 更不重要
+
+ current_date current_time current_timestamp
+
+-------------------------------------------------------------------------------------
+HQL2
+   
+   (from Topic t where t.msg is empty)
+in exist 用哪个
+
+用 exist 因为执行效率高
+
+session.getNameQuery()
+
+在类中写
+@NameQuery(name="",query=" ")
+！！！Natve
+SQLQuery q = session.createSQLQuery("").addEntity(Category.class);
+
+
+Criterion 标准 约束
+Criteria c = session.createCriteria(Topic.class);//from Topic
+                    .add(Restrictions.gt("id",2))//greater than = id>2
+                    .add(Restrictions.lt("id",8))//litter than = id <8
+
+qbc  query by criteric  
+
+qbe  query by example
+----------------------------------------------------------------
+
+性能优化
+    注意session.clear()的运用  缓存 HashTable
+    在一个大集合中进行遍历，取出其中的含有敏感字样的 对象
+
+    另外一种形式的内存泄露 
+    面试题：Java有内存泄露吗?
+    在语法级别没有，在实际使用中没有，file开了没关  
+
+1+N 问题：
+
+ join fetch   hqp   
+
+ criteric  sess
+
+①设置@ManyToOne的fetch属性值为fetchType.LAZY，这种方式解决后，后面的n条sql语句按需而发。但是有个弊端，就是如果需要级联查询就无法获取级联对象了。
+②设置@BatchSize(size=5)（该注解要加在类上面，跟@Entity在同一位置），这样发出的sql语句减少。这个设置在一定程度上提高了效率。
+③在hqp语句中使用用join fetch，事实上Criteria用的就是这种方法。这也是最常用的方法；
+@Test   
+//join fetch  
+publicvoid test1_N3(){  
+    Session session=sf.getCurrentSession();  
+    session.beginTransaction();  
+    //List<Topic> topics=(List<Topic>)session.createCriteria(Topic.class).list();//只有一条查询语句，Criteria方法就是这种方式  
+    List<Topic> topics=(List<Topic>)session.createQuery("from Topic t left join fetch t.category c").list();  
+    for (Topic t:topics) {  
+        System.out.println(t.getId()+"----"+t.getTitle());  
+        System.out.println(t.getCategory().getName());  
+    }  
+    session.getTransaction().commit();  
+}  
+    
+------------------------------------------------------------------
+N+1 问题：
+
+比如查找30个学生对象
+list 加载全部  iterate 有需要的时候一次加载一个  
+iterator 只把 主键取出来
+什么时候需要获取数据 就根据 id 去取
+
+list执行两次查询 发两次sql
+iterator  同样情况下 只会发一次  利用session缓存
+
+
+-----------------------------------------------------------------------
+数据临时存储在内存中
+
+一级缓存  session级别 load 默认使用二级缓存 iterator也默认使用
+          list默认往二级缓存添加数据 但是查询的时候不用
+二级缓存  sessionFactory级别
+    EHCache (memory,disk)
+
+    @Entity
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE
+        
+		)//re
+  <property name="cache.use_second_level_cache">true</property>
+      <property name="cache.provider_class">org.hibernate.cache.EhCacheProvider</property>
+查询缓存
+   查询语句一样才会起作用
+   先打开二级缓存
+  <property name="cache.use_query_cache">true</property>
+  
+  session.createQuery("from Category")
+      .setCacheable(true).list();
+
+--------------------------------------------------------------------------
+缓存算法
+    LRU  LFU   FIFO
+    1:Least Recently used    最近很少被使用
+    2:Least Frequently Used  命中率高低
+    3:first in first out  先进先出
+--------------------------------------------------------------------------
+二级缓存 实际用的少 面试作用比较大
+
+二级缓存 适用于 不经常改的 经常被访问
+--------------------------------------------------------------------------
+事务并发处理
+
+事务   数据库程序执行单元。
+    ：要么都执行，要么都不执行
+   ACID  原子性(不可拆分) 一致性 持久性  独立性(两个事务)
+   
+
+   丢失更新  脏读 读了另外一个没有提交事务的数据
+
+    不可重复读  (更新) 前后两次读不一样
+ 
+    幻读  (插入删除)  前后两次读不一样
+
+事务隔离机制
+   read-uncommitted 允许读未提交的数据 
+   readcommit  允许读提交的数据 幻读还是有肯能产生  可以避免脏读(一般是设这个级别)
+   repeatable 允许重复读 但是拒绝更新 ()
+   read serializable  不允许并发  
+hibernate  1 2 4 8
+   级别越高，效率越低
+------------------------------------------------------------
+--------------------------------------------------------------------------------
+Hibernate 解决 不可重复读的问题
+
+乐观锁 悲观锁
+
+   悲观锁 上把锁 不允许其他事务更改
+
+   load(Teacher.class,1,LockMode.UPGRADE); 生成的sql 语句 for update 依赖数据库给其加锁
+
+
+乐观锁  自己设一个版本字段
+    发现别人更新了 做出处理。
+
+int vaesion 版本字段 记录更新
+
+@Version
+public void getVersion();
+{
+	
+}
+----------------------------------------------------------------------------------
+hbm2ddl.auto  
+
+知识点名称  |  介绍     工作重要程度  面试重要程度  方法建议
+
+ xml        |             **                         查
+ annotation |             ***           *            查和用
+ 模拟原理   |   反射 
+            | 
+ 基础配置   |             ***                        用
+ 
+
+ clob blobs
+ 自定义类型
+  ID生成策略 auto         ***                        用
+  sequency idet           **
+  table                   *            
+  联合主键                **
+
+  核心开发接口            **                         用
+  SessionFactory 
+  openCurrentSession get  ***           **           用背
+  Session                 ***           ***
+  save get load 
+  clear flush 
+
+  query接口               
+
+  对象状态                *              **
+  trasient 
+  persistent 
+  detached
+
+  对象间关系  一对一外键 
+  一对多 多对一           ***            * 
+  多对多                  ***
+
+  集合映射                
+  继承映射                                **
+
+
+  树状结构                ***             ***
+  QL( native sql ,ejbql ,)
+
+  EJBQL                   ***             ***
+  QBC QBE                 **              **
+  1+N                     ***             ***
+  list iterator           *               *
+  三种缓存                *               ***
+  缓存算法                                *      了解
+  事务并发                                ***   
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+User          Group
+
+ N              1             @ManyToOne 不写@JoinColumn(name="??") 自动生成，比如groupid ;写了 groupid就是??
+
+                              @OneToMany 不写@JoinColumn(name="??") 报错 写了就是参考 user id 不会在表中生成多于字段
+                                                     （mappedby="id"） 
+mappedBy用于指定具有双向关系的两个实体中。哪个实体是被关联处理的。
+
+@OneToMany(mapped=“由One的一方指向Many的一方，并且，这个属性应该等于Many的一方中含有One类的属性的对象名，否则会出错”)

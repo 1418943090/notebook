@@ -1,0 +1,61 @@
+输入流 
+  字节流
+      InputStream
+        FileInputStream
+        BufferedInputStream 缓冲流
+
+        read(byte)
+        read(byte[])
+        read(byte,int off,int len);
+        read()
+
+  字符流
+      Reader
+        FileReader
+          read(char[])
+          read(char[],int off,int len)
+          read(char)
+        BufferedReader
+          readLine();
+
+
+输出流
+
+
+  BufferedWriter newLine();
+
+
+转换流 -----------  InputStreamReader  字节流->字符流  (InputStream)   用于编码解码 
+                    OutPutStramWriter                   (OutputStream)
+
+                    string--byte[] 编码
+                    byte[]--string 解码
+
+**************************
+DataInputStream     readInt();
+DataOutputStream   .writeInt() .writeUTF();
+*****************************
+//内存操作流
+ ByteArrayInputStream     
+ ByteArrayOutputStream .toByteArray();
+
+ CharArrayReader
+ CharArrayWriter
+
+ StringReader
+ StringWriter
+*********************************
+ 打印流
+
+ printWriter
+ PrintStream  System.out  println()的方法都是同步的  可设置自动刷新
+ ******************************************************
+ LineNumberReader 
+   getLineNumber
+   setLineNumber
+
+*********************************************************
+ 实现键盘录入
+
+InputStream = System.in;
+BufferedReader br = new BufferedReader(new InputStreamReader(is));

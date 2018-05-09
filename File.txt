@@ -1,0 +1,20 @@
+File 
+
+File(String)
+
+createNewFile()
+makeDir()
+makeDirs()
+file.exists();
+isFiles()
+isDirectory()
+getAbsolutionFile()
+
+File[] file = F.listFile();
+
+String[] s = file.list();
+file.getName();
+
+fileNameFilter()
+ //文件名过滤器
+

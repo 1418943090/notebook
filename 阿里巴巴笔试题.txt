@@ -1,0 +1,7 @@
+
+Linux中使用df-h/home和du-sh/home查看到使用的磁盘容量不同可能的原因是
+
+答案: 原因1
+         du命令只计算被文件占用的空间，不计算文件系统metadata占用的空间，如inodes,inode,maps,或者disk maps
+      原因2
+         

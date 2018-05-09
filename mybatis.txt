@@ -1,0 +1,291 @@
+
+'mybatis框架原理
+持久层框架 对JDBC的封装
+
+原生态JDBC程序问题
+
+mybatis开发dao
+原始dao开发方法 程序需要编写dao接口和dao实现类(掌握)
+
+mybatis的mapper接口 代理开发方法 (掌握)
+---------------------------------------------------------
+
+mybatis配置文件 SqlMapConfig.xml
+mybatis核心
+      mybatis输入映射
+      mybatis输出映射
+    mybatis的动态sql
+高级结果集映射(一对一，一对多，多对多)
+mybatis延迟加载
+mybatis查询缓存(一级缓存，二级缓存)
+mybatis逆向工程
+----------------------------------------------------
+原生jdbc编程的问题总结
+
+1 加载数据库驱动
+   fornName.class("com.jdbc.mysql.Driver");
+2 获取连接 
+   conn = DriverManager.getConnection("")
+------------------------------------------------
+1：数据库连接，使用时就创建，不使用就立即释放，对数据库进行频繁连接开启和关闭，造成数据库资源浪费，影响数据库性能。
+解决办法:使用数据库连接池管理数据库连接
+2：将sql语句硬编码到java代码中，如果sql语句修改，则需要修改代码重新编译，不利于系统维护
+设想:将sql语句配置在xml配置文件当中，即使sql变化，不需要对java代码进行重新编译。
+3：向preparedStatement中设置参数，对占位符号位置和设置参数值，硬编码在java代码中，不利于系统维护。
+4：从resultset中遍历结果集数据时存在硬编码，将获取表的字段进行硬编码，不利于系统维护
+ 设想:将查询的结果集，自动映射成java对象。
+ -------------------------------------------------------
+ mybatis框架原理
+
+ mybatis是一个持久层框架，是apache下的顶级项目。
+
+ mybatis让程序员主要精力放在sql上，通过mybatis提供的映射方式，自由灵活生成(半自动化，大部分需要程序员编写sql)
+
+ mybatis可以将向preparedStatement中的输入参数自动进行输入映射，将查询结果集灵活映射成java对象。(输出映射)
+
+SqlMapConfig.xml 是mybatis的全局配置文件
+ 配置了数据源，事务等mybatis运行环境
+
+配置映射(配置sql语句)
+mapper.xml (映射文件)
+
+SqlSessionFactoty(会话工厂) 创建SqlSession
+
+SqlSession会话 是一个接口
+增删改查
+
+Executor(执行器)
+作用:SqlSession内部通过执行器操作数据库
+
+底层封装对象
+
+mapped statement
+
+--------------------------------------------------
+SqlMpConfig.xml
+
+<?xml version="1.0" encoding="UTF-8"?>  
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"   
+"http://mybatis.org/dtd/mybatis-3-config.dtd">  
+  
+<!-- 注意：每个标签必须按顺序写，不然蛋疼的DTD会提示错误：The content of element type "configuration" must match "(properties?,settings?,typeAliases?,typeHandlers?,objectFactory?,objectWrapperFactory?,plugins?,environments?,mappers?)". -->  
+<configuration>  
+<!-- 和spring整合后enviroment将废弃 -->
+  <environments default="development">
+    <environment id="development">
+    <!-- jdbc事务 -->
+      <transactionManager type="JDBC"/>
+      <!-- 数据库连接池 -->
+      <dataSource type="POOLED">
+        <property name="driver" value="com.mysql.jdbc.Driver"/>
+        <property name="url" value="jdbc:mysql://localhost/mybatis"/>
+        <property name="username" value="root"/>
+        <property name="password" value="huang110"/>
+      </dataSource>
+    </environment>
+  </environments>
+  
+  <mappers>
+    <mapper resource="sqlmap/user.xml"/>
+  </mappers>
+  
+  
+</configuration>
+
+-------------------------------------------------
+在映射文件中配置sql语句
+user.xml ibatis前身
+usermapper.xml
+
+resultType 指的是单条记录所映射的java对象类型
+
+
+
+selectList
+#{}
+'%${value}%'拼接字符串
+可能会引起sql注入 修改拼接的字符串 如果是简单类型 ${}只能是value
+
+selectOne取出一条记录
+selectList取出多条记录
+
+如果使用selectList查询多条数据，则不能使用selectOne
+
+resultType  paparameterType
+'''
+--------------------------------------------------------------------------
+'添加用户
+ 在User.xml配置sql(statement)
+
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  <mapper namespace="test">
+   <select id="finduserById" parameterType="int" resultType="com.mybatis.user">
+     select * from user where id = #{value}<!-- 标示一个占位符 -->
+   </select>
+   <insert id="insertUser" parameterType="com.mybatis.user">
+      <selectKey keyProperty="id" resultType="java.lang.Integer" order="AFTER">
+        select last_insert_id()
+      </selectKey>
+      insert into user(name,age) value(#{name},#{age})
+   </insert>
+   <!-- 删除用户 -->
+   <delete id="deleteUser" parameterType="java.lang.Integer">
+     delete from user where id=#{value};
+   </delete>
+   <!-- 更新 -->
+   <update id="updateUser" parameterType="com.mybatis.user">
+     update user set name=#{name} ,age=#{age} where id=#{id}
+   </update>
+  </mapper>
+
+
+ <insert id="insertUser" parameterType="com.mybatis.user">
+      <selectKey keyProperty="id" resultType="java.lang.Integer" order="AFTER">
+        select last_insert_id()
+      </selectKey>
+      insert into user(name,age) value(#{name},#{age})
+ </insert>
+ 只适用自增id
+---------------------------------------------------------------------
+ select UUID(); varchar(35)
+先通过uuid查询到主键，将主键设置到user对象的id属性中
+其次在insert执行时，从user对象中取出id属性值
+ <selectKey keyProperty="id" resultType="java.lang.String" order="BEFORE">
+        select UUID()
+ </selectKey>
+     insert into user(id,name,age) value(#{id},#{name},#{age})
+------------------------------------------------------------------------
+删除用户
+  
+更新用户
+
+
+#{}标示一个占位符，可以是简单类型，pojo,hashmap
+如果接收简单类型#{}中可以写成value或其他值
+${}标示一个占位符，可以是简单类型，pojo,hashmap
+如果接收简单类型#{}中只能写成value
+'
+--------------------------------------
+OGNL
+--------------------------------------
+'
+parameterType  resultType
+---------------------------------------------------------------
+！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！
+Hibernate 和 Mybatis本质区别 和应用场景
+hibernate入门门槛比较高
+标准的ORM框架，不需要程序员编写SQL语句
+不利于SQL语句优化,修改
+
+----------------------------------------------------------------
+Mybatis:专注SQL本身,方便SQL优化，修改。mybatis是一个不完全的ORM框架
+虽然程序员自己写sql,mybatis也可以实现映射(输入映射，输出映射)；
+
+Hibernate 适用需求变化不多的中小型项目 比如:后台管理系统，erp,orm,oa
+mybatis适用需求变化较多的项目 比如:互联网项目
+
+企业进行技术选型，以低成本，高回报作为技术选型的原则
+
+适用项目本身的技术，根据项目组的技术力量进行选择。
+
+'-------------------------------------------------------------
+'mybatis 开发Dao的方法
+
+通过SqlSessionFactory创建SqlSession使用单例模式管理sqlSessionFactory
+(工厂一旦创建，使用一个实例)
+将来mybatis和spring整合后，使用单例模式管理sqlSessionFactory
+
+
+sqlSession面向用户(程序员)的接口
+
+sqlSession是线程不安全的，在sqlSession实现类中除了有接口中的方法还有数据域属性
+sqlsession最佳应用场合在方法体内定义成局部变量。
+---------------------------------------------------------------
+原始DAO开发方法
+程序员需要写dao接口和dao实现
+需要向dao实现类注入sessionfactory
+->原始dao开发问题
+代码重复较多。存在大量的模版方法
+设想将这些代码提取出来
+调用sqlsession方法时将statement id硬编码了
+传入的变量由于sqlsession方法使用泛型，如果传入变量错了
+编译期间不报错。
+
+---------------------------------------------------------------
+mapper代理方法
+程序员需要写mapper接口
+程序还需要编写mapper.xml
+mybatis可以自动生成mapper接口实现类代理对象
+开发规范；
+  1 在mapper.xml中namespace等于mapper接口地址
+  2 mapper接口中方法名和mapper.xml中statement的id一致
+  3 mapper.java接口中的方法输入参数类型和mapper.xml中statement的parameterType指定的类型一致
+  4 mapper.java接口中的方法返回值类型和mapper.xml中statement的resultType指定的类型一致
+
+ mapper接口方法参数只能有一个，系统是否不利于扩展维护。
+ 即使mapper接口只有一个参数，可以使用包装类型的pojo满足不同的业务方法的需求。
+ 注意:持久层方法参数
+
+ ---------------------------------------------------------------------------
+
+SqlMapConfig Mybatis全局配置文件
+
+ properties属性
+ 需求:
+ 将数据库连接参数单独配置在db。properties中，只需要在SqlMapConfig中加载db.properties属性值
+ 这样sqlmapconfig就不需要对数据库连接参数硬编码。
+
+ 1 在properties元素体内定义的属性首先被读取
+ 2 然后会读取properties元素中resource或url加载的属性，它会覆盖已读取的同名属性。
+ 3 最后读取parameterType传递的属性，它会覆盖已读取的同名属性
+
+ ---------------------------------------------------
+ 建议不要在properties元素体内添加任何属性值，只将属性值定义在properties文件中。
+ 定义的属性名要有一定的特殊性
+
+ settings全局配置参数
+ mybatis框架在运行时可以调整一些参数
+ 全局参数会影响mybatis的运行行为
+
+ ---------------------------------------------------
+ typeAliases 别名 (重点)
+
+ 需求 在mapper.xml中定义很多的statement ,statemet需要parameterType指定输入参数的类型
+
+ 如果在指定类型时输入类型全路径，不方便进行开发。可以针对parameterType定义一些别名
+ <typeAliases >
+ <!--  <typeAlias type="com.mapper.user" alias="user"/>--> 
+  <!-- 批量别名定义 -->
+  <package name="com.mapper"/>
+ </typeAliases>
+ ---------------------------------------------
+ typeHandlers (类型处理器)
+ mybatis通过typeHandlers完成jdbc类型和java类型的转换
+ ----------------------------------------------------------
+ objectFactory
+ plugins
+ ------------------------------------------
+ mappers(映射配置)
+ <mappers>
+    <mapper  resource="" />
+ </mappers>
+ ---------------------------------
+ 通过mapper接口加载
+ 需要将mapper接口类名和mapper.xml映射文件名称保持一致且在一个目录中
+使用mapper代理方式
+ <mapper class="" />
+
+ <!--批量加载-->
+ 指定mapper接口的包名  自动扫描包下边所有mapper
+ <package name="com.mybatis"/>
+ -----------------------------------------------------------
+ pojo(简单的java对象)包装类型   输入映射
+ 需求--
+ 用户信息的综合查询需要传入查询条件(可能包括用户信息，其他信息，比如商品，订单等)
+ 针对上边需求，建议使用自定义的包装类型的pojo
+
+ --------------------------------------------------------------
+

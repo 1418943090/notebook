@@ -1,0 +1,29 @@
+
+procedure存储过程
+
+预编译的sql语句，存储在数据库中。可以多次调用
+------------------------------------------
+连接方式
+
+内连接
+自然连接
+外连接(左连接，右连接，全连接)
+---------------------------------------------------------
+在数据库中查询语句速度很慢，如何优化？
+1.建索引 
+2.减少表之间的关联 
+3.优化sql，尽量让sql很快定位数据，不要让sql做全表查询，应该走索引,把数据 量大的表排在前面 4.简化查询字段，没用的字段不要，已经对返回结果的控制，尽量返回少量数据 5.尽量用PreparedStatement来查询，不要用Statement
+---------------------------------------------------------
+mysql 随机取一条数据
+
+select * from user order by rand() limit 1;  忌用
+SELECT * FROM users  AS t1  JOIN (SELECT ROUND(RAND() * ((SELECT MAX(userId) FROM `users`)-(SELECT MIN(userId) FROM users))+(SELECT MIN(userId) FROM users)) AS userId) AS t2 WHERE t1.userId >= t2.userId ORDER BY t1.userId LIMIT 1
+------
+SELECT * FROM users WHERE userId >= ((SELECT MAX(userId) FROM users)-(SELECT MIN(userId) FROM users)) * RAND() + (SELECT MIN(userId) FROM users)  LIMIT 1
+------------------------------------------------------
+SQL分类
+
+ DDL (Data Definition Languages)数据定义语言 create drop alter
+ DML (Data Manipulation Language)数据操纵语言 update insert select delete
+ DCL (Data Control Language) 数据控制语句 grant revoke
+---------------------------------------------------------------
