@@ -1,0 +1,4 @@
+git remote add notebok git@github.com:1418943090/notebook.git 先在github上创建一个仓库
+
+git push -u notebook master
+
